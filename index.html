@@ -1,54 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrantFocus - AI Scholarship Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-            colors: {
-              brand: {
-                50: '#eff6ff',
-                100: '#dbeafe',
-                500: '#3b82f6',
-                600: '#2563eb',
-                700: '#1d4ed8',
-                900: '#1e3a8a',
-              }
-            }
-          },
-        },
-      }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-      html {
-        scroll-behavior: smooth;
-      }
+        * { font-family: 'Inter', sans-serif; }
+        html { scroll-behavior: smooth; }
+        @keyframes blob { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
     </style>
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.3.1",
-    "react/": "https://esm.sh/react@18.3.1/",
-    "react-dom": "https://esm.sh/react-dom@18.3.1",
-    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
-    "recharts": "https://esm.sh/recharts@2.12.2",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
-  }
-}
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+<nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center gap-2 cursor-pointer">
+                <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                </svg>
+                <span class="font-bold text-xl text-slate-900">GrantFocus</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#problem" class="text-slate-600 hover:text-blue-600 font-medium">Problem</a>
+                <a href="#solution" class="text-slate-600 hover:text-blue-600 font-medium">Solution</a>
+                <a href="#market" class="text-slate-600 hover:text-blue-600 font-medium">Market</a>
+                <a href="#demo" class="text-slate-600 hover:text-blue-600 font-medium">AI Demo</a>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full font-medium">Get Early Access</button>
+            </div>
+
+            <button id="mobile-menu-btn" class="md:hidden">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="#problem" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600">Problem</a>
+            <a href="#solution" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600">Solution</a>
+            <a href="#market" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600">Market</a>
+            <a href="#demo" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600">AI Demo</a>
+        </div>
+    </div>
+</nav>
+
+<div class="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+        <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Serving Uzbekistan & Central Asia
+        </div>
+
+        <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 max-w-4xl mx-auto leading-tight">
+            Find Your Future with <br/>
+            <span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">AI-Powered Scholarships</span>
+        </h1>
+        
+        <p class="mt-4 max-w-2xl mx-auto text-xl text-slate-600 mb-10 leading-relaxed">
+            The centralized, verified platform for students in Uzbekistan. Stop missing deadlines and start getting funded.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+            <a href="#demo" class="inline-flex justify-center items-center px-8 py-4 text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700">
+                Try AI Matcher
+                <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </a>
+            <a href="#solution" class="inline-flex justify-center items-center px-8 py-4 border border-slate-200 text-lg font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50">
+                How it Works
+            </a>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-center items-center gap-8 text-sm font-medium text-slate-500">
+            <div class="flex items-center gap-2">
+                <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Verified Data</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>AI Recommendations</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Deadline Reminders</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="absolute top-0 left-1/2 w-full -translate-x-1/2 h-full z-0 pointer-events-none">
+        <div class="absolute top-[20%] left-[10%] w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute top-[20%] right-[10%] w-72 h-72 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-[20%] w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    </div>
+</div>
+
+<section id="problem" class="py-20 bg-white border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-base text-blue-600 font-semibold uppercase mb-2">The Problem</h2>
+            <p class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Why Students Miss Opportunities</p>
+            <p class="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">Navigating the scholarship landscape in Central Asia is currently broken.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100">
+                <div class="bg-white rounded-xl w-16 h-16 flex items-center justify-center mb-6 border border-slate-100">
+                    <svg class="h-10 w-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Scattered Information</h3>
+                <p class="text-slate-600 leading-relaxed">Information is spread across hundreds of disconnected websites, making search exhausting.</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100">
+                <div class="bg-white rounded-xl w-16 h-16 flex items-center justify-center mb-6 border border-slate-100">
+                    <svg class="h-10 w-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Fake Opportunities</h3>
+                <p class="text-slate-600 leading-relaxed">Students waste time applying to scams or expired listings that promise funding but deliver nothing.</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100">
+                <div class="bg-white rounded-xl w-16 h-16 flex items-center justify-center mb-6 border border-slate-100">
+                    <svg class="h-10 w-10 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Missed Deadlines</h3>
+                <p class="text-slate-600 leading-relaxed">Without a centralized tracking system, critical application windows are missed annually.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="solution" class="py-20 bg-slate-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-blue-400 font-semibold uppercase mb-2">The Solution</h2>
+                <h3 class="text-3xl md:text-4xl font-bold mb-6">A Smart Platform Built for Success</h3>
+                <p class="text-slate-300 text-lg mb-8 leading-relaxed">We've built the infrastructure to connect talent in Uzbekistan with the global funding they deserve.</p>
+                
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                            <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-1">Centralized Verified Platform</h4>
+                            <p class="text-slate-400">Every listing is vetted for authenticity. No more scams.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                            <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-1">AI Recommendations</h4>
+                            <p class="text-slate-400">Our algorithms match you with grants based on your unique profile.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                            <svg class="h-6 w-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-1">Deadline Reminders</h4>
+                            <p class="text-slate-400">Automated notifications ensure you never miss a submission date.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative">
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-1">
+                    <div class="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                        <div class="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-700"></div>
+                                <div>
+                                    <div class="h-3 w-24 bg-slate-700 rounded mb-1"></div>
+                                    <div class="h-2 w-16 bg-slate-800 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="h-8 w-20 bg-blue-600 rounded-lg opacity-20"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-800 rounded-lg p-4 border border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <div class="h-3 w-32 bg-slate-600 rounded mb-2"></div>
+                                    <div class="h-2 w-20 bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="h-6 w-6 rounded-full border-2 border-blue-500"></div>
+                            </div>
+                            <div class="bg-slate-800 rounded-lg p-4 border border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <div class="h-3 w-32 bg-slate-600 rounded mb-2"></div>
+                                    <div class="h-2 w-20 bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="h-6 w-6 rounded-full border-2 border-blue-500"></div>
+                            </div>
+                            <div class="bg-slate-800 rounded-lg p-4 border border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <div class="h-3 w-32 bg-slate-600 rounded mb-2"></div>
+                                    <div class="h-2 w-20 bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="h-6 w-6 rounded-full border-2 border-blue-500"></div>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-800">
+                            <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 w-3/4"></div>
+                            </div>
+                            <div class="mt-2 flex justify-between text-xs text-slate-500">
+                                <span>Profile Completeness</span>
+                                <span>75%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="demo" class="py-24 bg-slate-900 relative overflow-hidden">
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+
+    <div class="max-w-4xl mx-auto px-4 relative z-10">
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 text-blue-400 px-4 py-1 rounded-full text-xs font-bold uppercase mb-4">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                Live Demo
+            </div>
+            <h2 class="text-4xl font-extrabold text-white mb-4">Experience the AI Engine</h2>
+            <p class="text-slate-400 text-lg">Input your profile details below to see how our AI matches you with real opportunities.</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8">
+            <form id="demo-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-300 font-medium ml-1">Education Level</label>
+                    <select id="level" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5">
+                        <option>Undergraduate</option>
+                        <option>Master's</option>
+                        <option>PhD</option>
+                    </select>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-300 font-medium ml-1">Field of Study</label>
+                    <input id="field" type="text" value="Computer Science" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5"/>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-300 font-medium ml-1">Current Location</label>
+                    <input id="location" type="text" value="Tashkent, Uzbekistan" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5"/>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg">Find Matches</button>
+                </div>
+            </form>
+
+            <div id="results" class="min-h-[200px]">
+                <div class="h-full flex flex-col items-center justify-center text-slate-500 py-10">
+                    <svg class="h-12 w-12 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                    <p>AI results will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="market" class="py-20 bg-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-base text-blue-600 font-semibold uppercase mb-2">Market Opportunity</h2>
+            <h3 class="text-3xl font-extrabold text-slate-900 sm:text-4xl mb-6">1 Million+ Students</h3>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">The demand for international education in Uzbekistan and Central Asia is exploding. We are positioned to be the primary infrastructure for this generation.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div class="bg-white p-4 rounded-xl border border-slate-100 flex items-start gap-3">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900">Total Market</h4>
+                    <p class="text-sm text-slate-500">1M+ Active Students</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-100 flex items-start gap-3">
+                <div class="bg-green-100 p-2 rounded-lg">
+                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900">Growth Rate</h4>
+                    <p class="text-sm text-slate-500">20% Year over Year</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-white border-t border-slate-200 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="md:flex md:justify-between items-center">
+            <div class="mb-8 md:mb-0">
+                <span class="font-bold text-xl text-slate-900">GrantFocus</span>
+                <p class="text-slate-500 mt-2 text-sm">Empowering students in Uzbekistan to reach global heights.</p>
+            </div>
+            <div class="flex space-x-6 text-sm text-slate-500">
+                <a href="#" class="hover:text-blue-600">Privacy Policy</a>
+                <a href="#" class="hover:text-blue-600">Terms of Service</a>
+                <a href="#" class="hover:text-blue-600">Contact</a>
+            </div>
+        </div>
+        <div class="mt-8 border-t border-slate-100 pt-8 text-center text-xs text-slate-400">
+            &copy; 2026 GrantFocus. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<script>
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileMenu = document.getElementById('mobile-menu');
+
+mobileMenuBtn.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+});
+
+const demoForm = document.getElementById('demo-form');
+const resultsDiv = document.getElementById('results');
+
+demoForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    resultsDiv.innerHTML = `
+        <div class="space-y-4">
+            <div class="bg-slate-700 rounded-lg h-24 animate-pulse"></div>
+            <div class="bg-slate-700 rounded-lg h-24 animate-pulse"></div>
+            <div class="bg-slate-700 rounded-lg h-24 animate-pulse"></div>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        const mockData = [
+            {
+                name: "El-Yurt Umidi Foundation",
+                deadline: "2024-08-15",
+                amount: "Full Tuition + Stipend",
+                matchReason: "Matches your profile for Uzbekistan national merit scholarship programs."
+            },
+            {
+                name: "Central Asia Graduate Grant",
+                deadline: "2024-09-01",
+                amount: "$5,000/year",
+                matchReason: "Specific to STEM students in the region with strong academic records."
+            },
+            {
+                name: "Digital Future Scholarship",
+                deadline: "2024-10-20",
+                amount: "$2,500",
+                matchReason: "Targeted at technology and innovation fields for emerging markets."
+            }
+        ];
+
+        resultsDiv.innerHTML = `
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold mb-4">Recommended for You:</h3>
+                ${mockData.map(item => `
+                    <div class="bg-slate-800/50 rounded-lg p-5 border border-slate-700 hover:border-blue-500/50 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-lg font-bold text-white">${item.name}</h4>
+                            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded">${item.amount}</span>
+                        </div>
+                        <div class="text-sm text-slate-400 mb-3">
+                            <span>Deadline: <span class="text-white">${item.deadline}</span></span>
+                        </div>
+                        <div class="bg-blue-900/20 border border-blue-500/20 p-3 rounded text-sm text-blue-200">
+                            <span class="font-semibold mr-1">AI Insight:</span>
+                            ${item.matchReason}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }, 1500);
+});
 </script>
-  </head>
-  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand-100 selection:text-brand-900">
-    <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  </body>
+
+</body>
 </html>
