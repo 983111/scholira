@@ -13,13 +13,18 @@ export const findScholarships = async (params: SearchParams): Promise<SearchResu
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Server error: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Worker error response:", errorText);
+      throw new Error(`Failed to fetch scholarships. Please check your Cloudflare Worker.`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error: any) {
     console.error("Error fetching scholarships:", error);
-    throw error;
+    if (error.message.includes("API Key")) {
+      throw new Error("Backend configuration error. Please check your Cloudflare Worker API key setup.");
+    }
+    throw new Error(error.message || "Network error. Please try again.");
   }
 };
