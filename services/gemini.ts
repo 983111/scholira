@@ -1,7 +1,6 @@
 import { SearchParams, SearchResult } from "../types";
 
 export const findScholarships = async (params: SearchParams): Promise<SearchResult> => {
-  // Your Cloudflare Worker URL
   const WORKER_URL = "https://scholara-api.vishwajeetadkine705.workers.dev";
 
   try {
@@ -18,11 +17,9 @@ export const findScholarships = async (params: SearchParams): Promise<SearchResu
       throw new Error(errorData.error || `Server error: ${response.status}`);
     }
 
-    const data: SearchResult = await response.json();
-    return data;
-    
+    return await response.json();
   } catch (error: any) {
-    console.error("Error fetching scholarships from worker:", error);
+    console.error("Error fetching scholarships:", error);
     throw error;
   }
 };
