@@ -8,6 +8,19 @@ export interface Scholarship {
   location: string;
 }
 
+export interface Course {
+  id: string;
+  name: string;
+  provider: string;
+  subject: string;
+  level: string;
+  duration: string;
+  cost: string;
+  description: string;
+  skills: string[];
+  tags: string[];
+}
+
 export interface SearchParams {
   originCountry: string;
   studyLevel: string;
@@ -17,6 +30,17 @@ export interface SearchParams {
   sat?: string;
   ielts?: string;
   toefl?: string;
+}
+
+export interface CourseSearchParams {
+  query: string;
+  subject?: string;
+  level?: string;
+}
+
+export interface CourseSearchResult {
+  courses: Course[];
+  total: number;
 }
 
 export interface GroundingSource {
