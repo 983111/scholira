@@ -1,4 +1,4 @@
-# Scholara Global
+# Scholira Global
 
 AI-powered scholarship search engine for students from Central and Southeast Asia.
 
