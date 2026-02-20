@@ -7,10 +7,8 @@ import { Footer } from './components/Footer';
 import { LegalSections } from './components/LegalSections';
 import { findScholarships } from './services/gemini';
 import { SearchParams, SearchResult, Course } from './types';
-// Removed missing imports to fix build
-// import { CoursesPage } from './CoursesPage'; 
 
-// --- Inline Course Card Component ---
+// Inline Course Card to prevent missing file imports
 const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
   <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col h-full group">
     <div className="p-6 flex-1">
@@ -50,7 +48,6 @@ function App() {
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState('');
 
-  // Unified Search Handler
   const handleSearch = async (params: SearchParams) => {
     setLoading(true);
     setError(null);
@@ -58,16 +55,19 @@ function App() {
     setResult(null);
 
     try {
-      // Use the existing service but pass a flag or different params based on tab
-      const searchData = { 
+      const searchData: SearchParams = { 
         ...params, 
-        type: activeTab // Tell backend which type to search
+        type: activeTab 
       };
       
       const data = await findScholarships(searchData);
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please check your connection.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -76,8 +76,14 @@ function App() {
   const handleCourseSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if(!courseQuery.trim()) return;
-    handleSearch({ query: courseQuery, studyLevel: 'Any', originCountry: 'Any', fieldOfStudy: courseQuery, targetRegion: 'Any' });
-  }
+    handleSearch({ 
+      query: courseQuery, 
+      studyLevel: 'Any', 
+      originCountry: 'Any', 
+      fieldOfStudy: courseQuery, 
+      targetRegion: 'Any' 
+    });
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -86,7 +92,7 @@ function App() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
         
-        {/* Tab Switcher */}
+        {/* Tab Switcher Overlay */}
         <div className="relative z-30 flex justify-center -mt-28 mb-10">
           <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/20 inline-flex shadow-xl">
             <button onClick={() => { setActiveTab('scholarships'); setSearched(false); }} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Scholarships</button>
@@ -98,23 +104,25 @@ function App() {
           <SearchForm onSearch={handleSearch} isLoading={loading} />
         ) : (
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-4xl mx-auto -mt-20 relative z-10">
-            <form onSubmit={handleCourseSearch} className="flex gap-4">
+            <form onSubmit={handleCourseSearch} className="flex flex-col sm:flex-row gap-4">
               <input 
                 type="text" 
-                placeholder="What do you want to learn? (e.g. AI, Python)" 
-                className="w-full rounded-lg border-slate-300 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="What do you want to learn? (e.g. AI, Python, Business)" 
+                className="w-full rounded-lg border-slate-300 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                 value={courseQuery}
                 onChange={(e) => setCourseQuery(e.target.value)}
               />
-              <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50">
-                {loading ? 'Searching...' : 'Search'}
+              <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm whitespace-nowrap">
+                {loading ? 'Searching...' : 'Search Courses'}
               </button>
             </form>
           </div>
         )}
 
         {error && (
-          <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 text-red-700">{error}</div>
+          <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 text-red-700 rounded-lg shadow-sm">
+            {error}
+          </div>
         )}
 
         {searched && !loading && !error && result && (
@@ -123,7 +131,7 @@ function App() {
               {activeTab === 'scholarships' ? 'Scholarship Opportunities' : 'Recommended Courses'}
             </h2>
             
-            {activeTab === 'scholarships' && result.scholarships && (
+            {activeTab === 'scholarships' && result.scholarships && result.scholarships.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {result.scholarships.map((scholarship, index) => (
                   <ScholarshipCard key={index} scholarship={scholarship} />
@@ -131,7 +139,7 @@ function App() {
               </div>
             )}
 
-            {activeTab === 'courses' && result.courses && (
+            {activeTab === 'courses' && result.courses && result.courses.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {result.courses.map((course, index) => (
                   <CourseCard key={index} course={course} />
