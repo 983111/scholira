@@ -1,79 +1,105 @@
-// CoursesPage.tsx
 import React, { useState } from 'react';
 import { CourseCard } from './components/CourseCard';
 import { Button } from './components/Button';
 import { findCourses } from './services/courses';
 import { Course } from './types';
+import { LegalSections } from './components/LegalSections';
 
 export const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [searched, setSearched] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    
+
     setLoading(true);
+    setError(null);
     setSearched(true);
+    
     try {
       const data = await findCourses({ query });
       setCourses(data.courses || []);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while fetching courses.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Professional Skills & <span className="text-indigo-600">Certifications</span>
-        </h2>
-        <p className="mt-4 text-slate-500 max-w-2xl mx-auto">
-          Upskill with verified courses from Harvard, MIT, Google, and more.
-        </p>
-      </div>
+    <>
+      {/* Search Form - Mirrors the styling of SearchForm.tsx exactly */}
+      <div id="course-search" className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-5xl mx-auto -mt-20 relative z-10">
+        <div className="mb-6 pb-2 border-b border-slate-100">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center">
+            <svg className="w-4 h-4 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Discover Professional Certifications
+          </h3>
+          <p className="text-xs text-slate-500 mt-1">Search through top-tier courses from Harvard, MIT, edX, and Coursera.</p>
+        </div>
 
-      <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 mb-12 max-w-4xl mx-auto">
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-          <div className="flex-grow relative">
+          <div className="flex-grow">
             <input
               type="text"
-              placeholder="What do you want to learn? (e.g. AI, Python, Marketing)"
-              className="w-full rounded-lg border-slate-300 py-4 px-5 text-slate-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              placeholder="e.g., Python, Machine Learning, Business Analytics..."
+              className="block w-full rounded-lg border-slate-300 py-3.5 px-4 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-slate-50 transition-colors duration-200"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              required
             />
           </div>
-          <Button type="submit" isLoading={loading} className="md:w-48 shadow-lg shadow-indigo-100">
+          <Button type="submit" isLoading={loading} className="md:w-48 shadow-lg shadow-indigo-200 text-base py-3.5">
             Search Courses
           </Button>
         </form>
       </div>
 
-      {searched && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {error && (
+        <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 rounded-md shadow-sm">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {searched && !loading && !error && (
+        <section id="results" className="mt-12 animate-fade-in">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {courses.length > 0 ? 'Course Opportunities' : 'No Results Found'}
+            </h2>
+            <span className="text-sm text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
+              Powered by Scholira Engine
+            </span>
+          </div>
+
           {courses.length > 0 ? (
-            courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))
-          ) : !loading && (
-            <div className="col-span-full text-center py-20 bg-white rounded-xl border border-slate-200">
-               <p className="text-slate-500">No courses found matching "{query}". Try a broader term.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {courses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center">
+              <p className="text-slate-600">No courses matched your search. Try broadening your keywords.</p>
             </div>
           )}
-        </div>
+        </section>
       )}
-      
-      {!searched && (
-        <div className="text-center py-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-          <p className="text-slate-400 font-medium">Use the search bar above to explore online learning opportunities.</p>
-        </div>
+
+      {!searched && !loading && (
+        <section id="features" className="mt-16 text-center">
+           <h3 className="text-lg font-medium text-slate-900 mb-2">Enhance your Professional Value</h3>
+           <p className="text-sm text-slate-500 max-w-2xl mx-auto">Build high-income skills directly from world-renowned universities.</p>
+        </section>
       )}
-    </div>
+
+      <LegalSections />
+    </>
   );
 };
