@@ -1,7 +1,7 @@
 import { SearchParams, SearchResult } from "../types";
 
 export const findScholarships = async (params: SearchParams): Promise<SearchResult> => {
-  const WORKER_URL = "https://scholara-api.vishwajeetadkine705.workers.dev";
+  const WORKER_URL = "https://scholara-rag-api.vishwajeetadkine705.workers.dev";
 
   try {
     const response = await fetch(WORKER_URL, {
