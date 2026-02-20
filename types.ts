@@ -1,3 +1,5 @@
+// types.ts
+
 export interface Scholarship {
   name: string;
   provider: string;
@@ -7,6 +9,30 @@ export interface Scholarship {
   eligibility: string[];
   location: string;
 }
+
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
+export interface SearchParams {
+  originCountry: string;
+  studyLevel: string;
+  fieldOfStudy: string;
+  targetRegion: string;
+  gpa?: string;
+  sat?: string;
+  ielts?: string;
+  toefl?: string;
+}
+
+export interface SearchResult {
+  scholarships: Scholarship[];
+  rawText?: string;
+  sources?: GroundingSource[];
+}
+
+// --- COURSE TYPES ---
 
 export interface Course {
   id: string;
@@ -21,29 +47,13 @@ export interface Course {
   tags: string[];
 }
 
-export interface SearchParams {
-  type?: 'scholarships' | 'courses';
-  query?: string;
-  originCountry?: string;
-  studyLevel?: string;
-  fieldOfStudy?: string;
-  targetRegion?: string;
-  gpa?: string;
-  sat?: string;
-  ielts?: string;
-  toefl?: string;
+export interface CourseSearchParams {
+  query: string;
+  subject?: string;
+  level?: string;
 }
 
-export interface GroundingSource {
-  title: string;
-  uri: string;
-}
-
-export interface SearchResult {
-  scholarships?: Scholarship[];
-  courses?: Course[];
-  total?: number;
-  totalFound?: number;
-  rawText?: string;
-  sources?: GroundingSource[];
+export interface CourseSearchResult {
+  courses: Course[];
+  total: number;
 }
