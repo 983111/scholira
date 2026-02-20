@@ -8,30 +8,7 @@ export interface Scholarship {
   location: string;
 }
 
-export interface SearchParams {
-  originCountry: string;
-  studyLevel: string;
-  fieldOfStudy: string;
-  targetRegion: string;
-  gpa?: string;
-  sat?: string;
-  ielts?: string;
-  toefl?: string;
-}
-
-export interface GroundingSource {
-  title: string;
-  uri: string;
-}
-
-export interface SearchResult {
-  scholarships: Scholarship[];
-  rawText?: string;
-  sources?: GroundingSource[];
-}
-
-// --- NEW COURSE TYPES ---
-
+// --- NEW ADDITIONS FOR COURSES ---
 export interface Course {
   id: string;
   name: string;
@@ -45,13 +22,31 @@ export interface Course {
   tags: string[];
 }
 
-export interface CourseSearchParams {
-  query: string;
+export interface SearchParams {
+  // Common params
+  query?: string; // Added for generic search
+  originCountry?: string;
+  studyLevel?: string;
+  fieldOfStudy?: string;
+  targetRegion?: string;
+  gpa?: string;
+  sat?: string;
+  ielts?: string;
+  toefl?: string;
+  // Course specific
   subject?: string;
   level?: string;
 }
 
-export interface CourseSearchResult {
-  courses: Course[];
-  total: number;
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
+export interface SearchResult {
+  scholarships?: Scholarship[];
+  courses?: Course[]; // Added courses to result
+  total?: number;
+  rawText?: string;
+  sources?: GroundingSource[];
 }
