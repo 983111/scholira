@@ -1,3 +1,4 @@
+// App.tsx
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -5,10 +6,10 @@ import { SearchForm } from './components/SearchForm';
 import { ScholarshipCard } from './components/ScholarshipCard';
 import { Footer } from './components/Footer';
 import { LegalSections } from './components/LegalSections';
-import { findScholarships } from './services/gemini';
-import { SearchParams, SearchResult, Course } from './types';
+import { findScholarships, findCourses } from './services/gemini';
+import { SearchParams, SearchResult, CourseSearchResult, Course } from './types';
 
-// Inline Course Card to prevent missing file imports
+// Inline Course Card
 const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
   <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col h-full group">
     <div className="p-6 flex-1">
@@ -23,7 +24,7 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
       </h3>
       <p className="text-sm text-slate-600 line-clamp-2 mb-4">{course.description}</p>
       <div className="flex flex-wrap gap-1.5 mb-6">
-        {course.skills?.slice(0, 4).map((skill, idx) => (
+        {course.skills && course.skills.slice(0, 4).map((skill, idx) => (
           <span key={idx} className="px-2 py-0.5 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase rounded">
             {skill}
           </span>
@@ -34,55 +35,69 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
         <div><p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">Duration</p><p className="text-sm font-medium text-slate-800">{course.duration}</p></div>
       </div>
     </div>
-    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
-      <button className="w-full text-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Enroll via Platform</button>
+    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl flex justify-between">
+      <span className="text-xs text-slate-400 font-medium pt-1">Verified</span>
+      <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View Course</button>
     </div>
   </div>
 );
 
 function App() {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
-  const [result, setResult] = useState<SearchResult | null>(null);
+  
+  // Independent States for strict TypeScript mapping
+  const [scholarshipResult, setScholarshipResult] = useState<SearchResult | null>(null);
+  const [courseResult, setCourseResult] = useState<CourseSearchResult | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState('');
 
-  const handleSearch = async (params: SearchParams) => {
+  // Handle Original Scholarship Search
+  const handleScholarshipSearch = async (params: SearchParams) => {
     setLoading(true);
     setError(null);
     setSearched(true);
-    setResult(null);
+    setScholarshipResult(null);
 
     try {
-      const searchData: SearchParams = { 
-        ...params, 
-        type: activeTab 
-      };
-      
-      const data = await findScholarships(searchData);
-      setResult(data);
+      const data = await findScholarships(params);
+      setScholarshipResult(data);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An error occurred. Please check your connection.');
-      }
+      if (err instanceof Error) setError(err.message);
+      else setError('An error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCourseSearch = (e: React.FormEvent) => {
+  // Handle New Course Search
+  const handleCourseSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!courseQuery.trim()) return;
-    handleSearch({ 
-      query: courseQuery, 
-      studyLevel: 'Any', 
-      originCountry: 'Any', 
-      fieldOfStudy: courseQuery, 
-      targetRegion: 'Any' 
-    });
+    if (!courseQuery.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    setSearched(true);
+    setCourseResult(null);
+
+    try {
+      const data = await findCourses({ query: courseQuery });
+      setCourseResult(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to switch tabs cleanly
+  const switchTab = (tab: 'scholarships' | 'courses') => {
+    setActiveTab(tab);
+    setSearched(false);
+    setError(null);
   };
 
   return (
@@ -92,22 +107,22 @@ function App() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
         
-        {/* Tab Switcher Overlay */}
+        {/* Tab Switcher */}
         <div className="relative z-30 flex justify-center -mt-28 mb-10">
           <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/20 inline-flex shadow-xl">
-            <button onClick={() => { setActiveTab('scholarships'); setSearched(false); }} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Scholarships</button>
-            <button onClick={() => { setActiveTab('courses'); setSearched(false); }} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Online Courses</button>
+            <button onClick={() => switchTab('scholarships')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Scholarships</button>
+            <button onClick={() => switchTab('courses')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Online Courses</button>
           </div>
         </div>
 
         {activeTab === 'scholarships' ? (
-          <SearchForm onSearch={handleSearch} isLoading={loading} />
+          <SearchForm onSearch={handleScholarshipSearch} isLoading={loading} />
         ) : (
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-4xl mx-auto -mt-20 relative z-10">
             <form onSubmit={handleCourseSearch} className="flex flex-col sm:flex-row gap-4">
               <input 
                 type="text" 
-                placeholder="What do you want to learn? (e.g. AI, Python, Business)" 
+                placeholder="What do you want to learn? (e.g. AI, Python, Marketing)" 
                 className="w-full rounded-lg border-slate-300 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                 value={courseQuery}
                 onChange={(e) => setCourseQuery(e.target.value)}
@@ -125,33 +140,45 @@ function App() {
           </div>
         )}
 
-        {searched && !loading && !error && result && (
+        {searched && !loading && !error && (
           <section className="mt-12 animate-fade-in">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">
               {activeTab === 'scholarships' ? 'Scholarship Opportunities' : 'Recommended Courses'}
             </h2>
             
-            {activeTab === 'scholarships' && result.scholarships && result.scholarships.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {result.scholarships.map((scholarship, index) => (
-                  <ScholarshipCard key={index} scholarship={scholarship} />
-                ))}
-              </div>
+            {/* SCHOLARSHIP RESULTS */}
+            {activeTab === 'scholarships' && scholarshipResult && (
+              <>
+                {scholarshipResult.scholarships && scholarshipResult.scholarships.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {scholarshipResult.scholarships.map((scholarship, index) => (
+                      <ScholarshipCard key={index} scholarship={scholarship} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 prose prose-slate max-w-none">
+                    <p className="text-slate-600 mb-4">We found some information, but could not format it into cards:</p>
+                    <div className="whitespace-pre-wrap text-slate-800">{scholarshipResult.rawText}</div>
+                  </div>
+                )}
+              </>
             )}
 
-            {activeTab === 'courses' && result.courses && result.courses.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {result.courses.map((course, index) => (
-                  <CourseCard key={index} course={course} />
-                ))}
-              </div>
-            )}
-            
-            {((activeTab === 'scholarships' && (!result.scholarships || result.scholarships.length === 0)) ||
-              (activeTab === 'courses' && (!result.courses || result.courses.length === 0))) && (
-              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center text-slate-600">
-                No results found. Try adjusting your search terms.
-              </div>
+            {/* COURSE RESULTS */}
+            {activeTab === 'courses' && courseResult && (
+              <>
+                {courseResult.courses && courseResult.courses.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {courseResult.courses.map((course, index) => (
+                      <CourseCard key={index} course={course} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center text-slate-600">
+                    No courses found for "{courseQuery}". Try adjusting your search.
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}
