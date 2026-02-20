@@ -6,18 +6,51 @@ import { ScholarshipCard } from './components/ScholarshipCard';
 import { Footer } from './components/Footer';
 import { LegalSections } from './components/LegalSections';
 import { findScholarships } from './services/gemini';
-import { SearchParams, SearchResult } from './types';
-import { CoursesPage } from './CoursesPage';
+import { SearchParams, SearchResult, Course } from './types';
+// Removed missing imports to fix build
+// import { CoursesPage } from './CoursesPage'; 
+
+// --- Inline Course Card Component ---
+const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
+  <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col h-full group">
+    <div className="p-6 flex-1">
+      <div className="flex justify-between items-start mb-4">
+        <div className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+          {course.provider}
+        </div>
+        <span className="text-xs text-slate-500 font-medium">{course.level}</span>
+      </div>
+      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors line-clamp-2">
+        {course.name}
+      </h3>
+      <p className="text-sm text-slate-600 line-clamp-2 mb-4">{course.description}</p>
+      <div className="flex flex-wrap gap-1.5 mb-6">
+        {course.skills?.slice(0, 4).map((skill, idx) => (
+          <span key={idx} className="px-2 py-0.5 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase rounded">
+            {skill}
+          </span>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+        <div><p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">Cost</p><p className="text-sm font-medium text-slate-800">{course.cost}</p></div>
+        <div><p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">Duration</p><p className="text-sm font-medium text-slate-800">{course.duration}</p></div>
+      </div>
+    </div>
+    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+      <button className="w-full text-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Enroll via Platform</button>
+    </div>
+  </div>
+);
 
 function App() {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
-  
-  // Scholarship States
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [courseQuery, setCourseQuery] = useState('');
 
+  // Unified Search Handler
   const handleSearch = async (params: SearchParams) => {
     setLoading(true);
     setError(null);
@@ -25,14 +58,26 @@ function App() {
     setResult(null);
 
     try {
-      const data = await findScholarships(params);
+      // Use the existing service but pass a flag or different params based on tab
+      const searchData = { 
+        ...params, 
+        type: activeTab // Tell backend which type to search
+      };
+      
+      const data = await findScholarships(searchData);
       setResult(data);
     } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching scholarships. Please try again.');
+      setError(err.message || 'An error occurred. Please check your connection.');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCourseSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!courseQuery.trim()) return;
+    handleSearch({ query: courseQuery, studyLevel: 'Any', originCountry: 'Any', fieldOfStudy: courseQuery, targetRegion: 'Any' });
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -41,138 +86,70 @@ function App() {
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
         
-        {/* Sleek Tab Switcher Overlay */}
+        {/* Tab Switcher */}
         <div className="relative z-30 flex justify-center -mt-28 mb-10">
           <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/20 inline-flex shadow-xl">
-            <button
-              onClick={() => setActiveTab('scholarships')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-                activeTab === 'scholarships'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Scholarships
-            </button>
-            <button
-              onClick={() => setActiveTab('courses')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-                activeTab === 'courses'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Online Courses
-            </button>
+            <button onClick={() => { setActiveTab('scholarships'); setSearched(false); }} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Scholarships</button>
+            <button onClick={() => { setActiveTab('courses'); setSearched(false); }} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Online Courses</button>
           </div>
         </div>
 
         {activeTab === 'scholarships' ? (
-          <>
-            <SearchForm onSearch={handleSearch} isLoading={loading} />
+          <SearchForm onSearch={handleSearch} isLoading={loading} />
+        ) : (
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-4xl mx-auto -mt-20 relative z-10">
+            <form onSubmit={handleCourseSearch} className="flex gap-4">
+              <input 
+                type="text" 
+                placeholder="What do you want to learn? (e.g. AI, Python)" 
+                className="w-full rounded-lg border-slate-300 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500"
+                value={courseQuery}
+                onChange={(e) => setCourseQuery(e.target.value)}
+              />
+              <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50">
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+            </form>
+          </div>
+        )}
 
-            {error && (
-              <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 rounded-md shadow-sm">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                </div>
+        {error && (
+          <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 text-red-700">{error}</div>
+        )}
+
+        {searched && !loading && !error && result && (
+          <section className="mt-12 animate-fade-in">
+            <h2 className="text-2xl font-bold text-slate-900 mb-8">
+              {activeTab === 'scholarships' ? 'Scholarship Opportunities' : 'Recommended Courses'}
+            </h2>
+            
+            {activeTab === 'scholarships' && result.scholarships && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {result.scholarships.map((scholarship, index) => (
+                  <ScholarshipCard key={index} scholarship={scholarship} />
+                ))}
               </div>
             )}
 
-            {searched && !loading && !error && result && (
-              <section id="results" className="mt-12 animate-fade-in">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900">
-                    {result.scholarships.length > 0 ? 'Scholarship Opportunities' : 'Search Results'}
-                  </h2>
-                  <span className="text-sm text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                    Powered by Google Gemini
-                  </span>
-                </div>
-
-                {result.scholarships.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {result.scholarships.map((scholarship, index) => (
-                      <ScholarshipCard key={index} scholarship={scholarship} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 prose prose-slate max-w-none">
-                    <p className="text-slate-600 mb-4">
-                      We found some information, but could not format it into cards. Here is what we found:
-                    </p>
-                    <div className="whitespace-pre-wrap text-slate-800">{result.rawText}</div>
-                  </div>
-                )}
-
-                {result.sources && result.sources.length > 0 && (
-                  <div className="mt-12 bg-white p-6 rounded-lg border border-slate-200">
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Verified Sources</h3>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {result.sources.map((source, idx) => (
-                        <li key={idx}>
-                          <a
-                            href={source.uri}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline truncate"
-                          >
-                            <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                            </svg>
-                            <span className="truncate">{source.title}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </section>
+            {activeTab === 'courses' && result.courses && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {result.courses.map((course, index) => (
+                  <CourseCard key={index} course={course} />
+                ))}
+              </div>
             )}
-
-            {!searched && !loading && (
-              <section id="features" className="mt-16 text-center">
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Why use Scholira?</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8 max-w-4xl mx-auto">
-                  <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    </div>
-                    <h4 className="font-semibold text-slate-800">Smart Search</h4>
-                    <p className="text-sm text-slate-500 mt-2">Our AI scans active opportunities to match your background and goals.</p>
-                  </div>
-                  <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h4 className="font-semibold text-slate-800">Deadline Awareness</h4>
-                    <p className="text-sm text-slate-500 mt-2">Stay on track with clear funding deadlines and provider links.</p>
-                  </div>
-                  <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h4 className="font-semibold text-slate-800">Regional Relevance</h4>
-                    <p className="text-sm text-slate-500 mt-2">Designed for students from Central Asia, Southeast Asia, and global applicants.</p>
-                  </div>
-                </div>
-              </section>
+            
+            {((activeTab === 'scholarships' && (!result.scholarships || result.scholarships.length === 0)) ||
+              (activeTab === 'courses' && (!result.courses || result.courses.length === 0))) && (
+              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center text-slate-600">
+                No results found. Try adjusting your search terms.
+              </div>
             )}
-
-            <LegalSections />
-          </>
-        ) : (
-          <CoursesPage />
+          </section>
         )}
-      </main>
 
+        <LegalSections />
+      </main>
       <Footer />
     </div>
   );
