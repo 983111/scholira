@@ -8,7 +8,6 @@ export interface Scholarship {
   location: string;
 }
 
-// --- NEW ADDITIONS FOR COURSES ---
 export interface Course {
   id: string;
   name: string;
@@ -23,8 +22,8 @@ export interface Course {
 }
 
 export interface SearchParams {
-  // Common params
-  query?: string; // Added for generic search
+  type?: 'scholarships' | 'courses';
+  query?: string;
   originCountry?: string;
   studyLevel?: string;
   fieldOfStudy?: string;
@@ -33,9 +32,6 @@ export interface SearchParams {
   sat?: string;
   ielts?: string;
   toefl?: string;
-  // Course specific
-  subject?: string;
-  level?: string;
 }
 
 export interface GroundingSource {
@@ -45,8 +41,9 @@ export interface GroundingSource {
 
 export interface SearchResult {
   scholarships?: Scholarship[];
-  courses?: Course[]; // Added courses to result
+  courses?: Course[];
   total?: number;
+  totalFound?: number;
   rawText?: string;
   sources?: GroundingSource[];
 }
