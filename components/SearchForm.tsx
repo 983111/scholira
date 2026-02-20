@@ -33,8 +33,8 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, isLoading }) =
   const sectionHeaderClasses = "text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center";
 
   return (
-    <div className="bg-white rounded-xl shadow-xl border-t-4 border-indigo-600 p-6 md:p-8 max-w-5xl mx-auto -mt-20 relative z-10">
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <div id="search" className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-5xl mx-auto -mt-20 relative z-10">
+      <form onSubmit={handleSubmit} className="space-y-8" aria-label="Scholarship search form">
         
         {/* Section 1: Core Preferences */}
         <div>
