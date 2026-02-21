@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -7,54 +6,18 @@ import { ScholarshipCard } from './components/ScholarshipCard';
 import { Footer } from './components/Footer';
 import { LegalSections } from './components/LegalSections';
 import { findScholarships, findCourses } from './services/gemini';
-import { SearchParams, SearchResult, CourseSearchResult, Course } from './types';
-
-// Inline Course Card
-const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
-  <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col h-full group">
-    <div className="p-6 flex-1">
-      <div className="flex justify-between items-start mb-4">
-        <div className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-          {course.provider}
-        </div>
-        <span className="text-xs text-slate-500 font-medium">{course.level}</span>
-      </div>
-      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors line-clamp-2">
-        {course.name}
-      </h3>
-      <p className="text-sm text-slate-600 line-clamp-2 mb-4">{course.description}</p>
-      <div className="flex flex-wrap gap-1.5 mb-6">
-        {course.skills && course.skills.slice(0, 4).map((skill, idx) => (
-          <span key={idx} className="px-2 py-0.5 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase rounded">
-            {skill}
-          </span>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-        <div><p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">Cost</p><p className="text-sm font-medium text-slate-800">{course.cost}</p></div>
-        <div><p className="text-xs text-slate-400 uppercase font-semibold mb-0.5">Duration</p><p className="text-sm font-medium text-slate-800">{course.duration}</p></div>
-      </div>
-    </div>
-    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl flex justify-between">
-      <span className="text-xs text-slate-400 font-medium pt-1">Verified</span>
-      <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View Course</button>
-    </div>
-  </div>
-);
+import { CourseCard } from './components/CourseCard';
+import { SearchParams, SearchResult, CourseSearchResult } from './types';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
-  
-  // Independent States for strict TypeScript mapping
   const [scholarshipResult, setScholarshipResult] = useState<SearchResult | null>(null);
   const [courseResult, setCourseResult] = useState<CourseSearchResult | null>(null);
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState('');
 
-  // Handle Original Scholarship Search
   const handleScholarshipSearch = async (params: SearchParams) => {
     setLoading(true);
     setError(null);
@@ -65,35 +28,31 @@ function App() {
       const data = await findScholarships(params);
       setScholarshipResult(data);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('An error occurred.');
+      setError(err instanceof Error ? err.message : 'An error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle New Course Search
   const handleCourseSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!courseQuery.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     setSearched(true);
     setCourseResult(null);
 
     try {
-      const data = await findCourses({ query: courseQuery });
+      const data = await findCourses({ query: courseQuery.trim() });
       setCourseResult(data);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('An error occurred.');
+      setError(err instanceof Error ? err.message : 'An error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to switch tabs cleanly
   const switchTab = (tab: 'scholarships' | 'courses') => {
     setActiveTab(tab);
     setSearched(false);
@@ -101,81 +60,91 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 flex flex-col">
       <Navbar />
       <Hero />
 
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
-        
-        {/* Tab Switcher */}
-        <div className="relative z-30 flex justify-center -mt-28 mb-10">
-          <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/20 inline-flex shadow-xl">
-            <button onClick={() => switchTab('scholarships')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Scholarships</button>
-            <button onClick={() => switchTab('courses')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-white text-indigo-700 shadow-sm' : 'text-white/80 hover:bg-white/10'}`}>Online Courses</button>
+        <div className="relative z-30 flex justify-center -mt-20 mb-8">
+          <div className="bg-white/90 backdrop-blur-lg p-1.5 rounded-2xl border border-indigo-100 inline-flex shadow-xl">
+            <button onClick={() => switchTab('scholarships')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Scholarships</button>
+            <button onClick={() => switchTab('courses')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Online Courses</button>
           </div>
         </div>
 
         {activeTab === 'scholarships' ? (
           <SearchForm onSearch={handleScholarshipSearch} isLoading={loading} />
         ) : (
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-6 md:p-8 max-w-4xl mx-auto -mt-20 relative z-10">
+          <div id="search" className="bg-white rounded-2xl shadow-xl border border-indigo-100 p-6 md:p-8 max-w-4xl mx-auto relative z-10">
+            <h3 className="font-bold text-slate-900 mb-1">Find Professional Courses</h3>
+            <p className="text-sm text-slate-600 mb-5">Get practical courses from top global providers based on your goals.</p>
             <form onSubmit={handleCourseSearch} className="flex flex-col sm:flex-row gap-4">
-              <input 
-                type="text" 
-                placeholder="What do you want to learn? (e.g. AI, Python, Marketing)" 
-                className="w-full rounded-lg border-slate-300 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+              <input
+                type="text"
+                placeholder="What do you want to learn? (AI, Python, Product Management...)"
+                className="w-full rounded-xl border-indigo-100 py-3 px-4 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                 value={courseQuery}
                 onChange={(e) => setCourseQuery(e.target.value)}
+                required
               />
-              <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm whitespace-nowrap">
+              <button type="submit" disabled={loading} className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white px-8 py-3 rounded-xl font-semibold hover:opacity-95 disabled:opacity-50 transition-opacity shadow-md whitespace-nowrap">
                 {loading ? 'Searching...' : 'Search Courses'}
               </button>
             </form>
           </div>
         )}
 
-        {error && (
-          <div className="mt-8 bg-red-50 border-l-4 border-red-400 p-4 text-red-700 rounded-lg shadow-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="mt-8 bg-red-50 border border-red-200 p-4 text-red-700 rounded-xl shadow-sm">{error}</div>}
 
         {searched && !loading && !error && (
           <section className="mt-12 animate-fade-in">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">
               {activeTab === 'scholarships' ? 'Scholarship Opportunities' : 'Recommended Courses'}
             </h2>
-            
-            {/* SCHOLARSHIP RESULTS */}
+
             {activeTab === 'scholarships' && scholarshipResult && (
               <>
-                {scholarshipResult.scholarships && scholarshipResult.scholarships.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {scholarshipResult.scholarships.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                     {scholarshipResult.scholarships.map((scholarship, index) => (
-                      <ScholarshipCard key={index} scholarship={scholarship} />
+                      <ScholarshipCard key={`${scholarship.name}-${index}`} scholarship={scholarship} />
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 prose prose-slate max-w-none">
-                    <p className="text-slate-600 mb-4">We found some information, but could not format it into cards:</p>
-                    <div className="whitespace-pre-wrap text-slate-800">{scholarshipResult.rawText}</div>
+                  <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose prose-slate max-w-none">
+                    <p className="text-slate-600 mb-4">No structured scholarship cards found for this query.</p>
+                    {scholarshipResult.rawText && <div className="whitespace-pre-wrap text-slate-800">{scholarshipResult.rawText}</div>}
+                  </div>
+                )}
+
+                {scholarshipResult.sources && scholarshipResult.sources.length > 0 && (
+                  <div className="mt-8 bg-white border border-indigo-100 rounded-xl p-5">
+                    <p className="text-sm font-semibold text-slate-900 mb-2">Sources</p>
+                    <ul className="space-y-1 text-sm text-indigo-700">
+                      {scholarshipResult.sources.slice(0, 5).map((source) => (
+                        <li key={source.uri}>
+                          <a href={source.uri} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            {source.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </>
             )}
 
-            {/* COURSE RESULTS */}
             {activeTab === 'courses' && courseResult && (
               <>
-                {courseResult.courses && courseResult.courses.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {courseResult.courses.map((course, index) => (
-                      <CourseCard key={index} course={course} />
+                {courseResult.courses.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+                    {courseResult.courses.map((course) => (
+                      <CourseCard key={course.id} course={course} />
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center text-slate-600">
-                    No courses found for "{courseQuery}". Try adjusting your search.
+                  <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center text-slate-600">
+                    No courses found for "{courseQuery}". Try broader keywords.
                   </div>
                 )}
               </>
