@@ -1,5 +1,3 @@
-// types.ts
-
 export interface Scholarship {
   name: string;
   provider: string;
@@ -8,6 +6,7 @@ export interface Scholarship {
   description: string;
   eligibility: string[];
   location: string;
+  applicationUrl?: string;
 }
 
 export interface GroundingSource {
@@ -32,8 +31,6 @@ export interface SearchResult {
   sources?: GroundingSource[];
 }
 
-// --- COURSE TYPES ---
-
 export interface Course {
   id: string;
   name: string;
@@ -45,6 +42,7 @@ export interface Course {
   description: string;
   skills: string[];
   tags: string[];
+  link?: string;
 }
 
 export interface CourseSearchParams {
