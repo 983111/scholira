@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { SearchForm } from '@/components/SearchForm';
@@ -9,16 +9,55 @@ import { findScholarships, findCourses } from '@/services/gemini';
 import { CourseCard } from '@/components/CourseCard';
 import { SearchParams, SearchResult, CourseSearchResult } from '@/types';
 
-type AppPage = 'search' | 'consultancy' | 'profile';
+type AppPage = 'dashboard' | 'consultancy' | 'profile';
 
-function MainSearch() {
+interface UserProfile {
+  fullName: string;
+  originCountry: string;
+  targetMajor: string;
+  targetRegion: string;
+  studyLevel: string;
+  gpa: string;
+  sat: string;
+  interests: string;
+  achievements: string;
+}
+
+const PROFILE_STORAGE_KEY = 'scholira-user-profile';
+
+const emptyProfile: UserProfile = {
+  fullName: '',
+  originCountry: '',
+  targetMajor: '',
+  targetRegion: '',
+  studyLevel: '',
+  gpa: '',
+  sat: '',
+  interests: '',
+  achievements: '',
+};
+
+function DashboardPage({ profile }: { profile: UserProfile }) {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
   const [scholarshipResult, setScholarshipResult] = useState<SearchResult | null>(null);
   const [courseResult, setCourseResult] = useState<CourseSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
-  const [courseQuery, setCourseQuery] = useState('');
+  const [courseQuery, setCourseQuery] = useState(profile.targetMajor);
+  const [autoRecommendationsLoaded, setAutoRecommendationsLoaded] = useState(false);
+
+  const recommendationParams: SearchParams = useMemo(
+    () => ({
+      originCountry: profile.originCountry || 'India',
+      studyLevel: profile.studyLevel || 'Bachelor',
+      fieldOfStudy: profile.targetMajor || 'Computer Science',
+      targetRegion: profile.targetRegion || 'Global',
+      gpa: profile.gpa,
+      sat: profile.sat,
+    }),
+    [profile]
+  );
 
   const handleScholarshipSearch = async (params: SearchParams) => {
     setLoading(true);
@@ -53,10 +92,42 @@ function MainSearch() {
     }
   };
 
+  useEffect(() => {
+    const runAutoRecommendations = async () => {
+      setLoading(true);
+      setError(null);
+      setSearched(true);
+      try {
+        const [scholarships, courses] = await Promise.all([
+          findScholarships(recommendationParams),
+          findCourses({ query: `${profile.targetMajor || ''} ${profile.interests || ''}`.trim() || 'High demand skills' }),
+        ]);
+        setScholarshipResult(scholarships);
+        setCourseResult(courses);
+      } catch (err: any) {
+        setError(err.message || 'Could not load recommendations right now.');
+      } finally {
+        setLoading(false);
+        setAutoRecommendationsLoaded(true);
+      }
+    };
+
+    if (!autoRecommendationsLoaded) {
+      runAutoRecommendations();
+    }
+  }, [autoRecommendationsLoaded, profile.interests, profile.targetMajor, recommendationParams]);
+
   return (
     <>
       <Hero />
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mt-6 max-w-4xl mx-auto">
+          <h2 className="text-slate-900 font-semibold">Welcome, {profile.fullName || 'Scholar'} 👋</h2>
+          <p className="text-sm text-slate-700 mt-1">
+            Your dashboard is personalized from your saved profile. You can use automatic recommendations or search manually.
+          </p>
+        </div>
+
         <div className="relative z-30 flex justify-center -mt-20 mb-8">
           <div className="bg-white/90 backdrop-blur-lg p-1.5 rounded-2xl border border-indigo-100 inline-flex shadow-xl">
             <button onClick={() => setActiveTab('scholarships')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Scholarships</button>
@@ -92,6 +163,9 @@ function MainSearch() {
 
         {searched && !loading && (
           <section className="mt-12">
+            <h3 className="font-bold text-lg text-slate-900 mb-4">
+              {activeTab === 'scholarships' ? 'Recommended Scholarships' : 'Recommended Courses'}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
               {activeTab === 'scholarships' && scholarshipResult?.scholarships.map((s, i) => <ScholarshipCard key={i} scholarship={s} />)}
               {activeTab === 'courses' && courseResult?.courses.map((c) => <CourseCard key={c.id} course={c} />)}
@@ -165,53 +239,98 @@ function ConsultancyPage() {
   );
 }
 
-function ProfilePage() {
+function ProfilePage({
+  profile,
+  onSave,
+}: {
+  profile: UserProfile;
+  onSave: (profile: UserProfile) => void;
+}) {
+  const [formData, setFormData] = useState<UserProfile>(profile);
+
+  const onChangeField = (field: keyof UserProfile, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const submitProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
   return (
     <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
       <div className="bg-white rounded-2xl border border-indigo-100 shadow-xl p-8">
         <h1 className="text-xl font-bold text-slate-900">Profile</h1>
-        <p className="text-sm text-slate-600 mt-1 mb-6">Save your academic background for personalized recommendations.</p>
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder="Full name" className="rounded-xl border border-slate-200 px-4 py-2.5" />
-          <input placeholder="Target major" className="rounded-xl border border-slate-200 px-4 py-2.5" />
-          <input placeholder="GPA" className="rounded-xl border border-slate-200 px-4 py-2.5" />
-          <input placeholder="SAT/ACT score" className="rounded-xl border border-slate-200 px-4 py-2.5" />
-          <textarea placeholder="Achievements" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-28" />
-          <textarea placeholder="Interests (comma separated)" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-24" />
-          <button type="button" className="md:col-span-2 rounded-xl bg-indigo-600 text-white py-3 font-semibold hover:bg-indigo-700">Save Profile</button>
+        <p className="text-sm text-slate-600 mt-1 mb-6">This profile is saved locally in your browser and powers recommendations on your dashboard.</p>
+        <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={submitProfile}>
+          <input placeholder="Full name" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.fullName} onChange={(e) => onChangeField('fullName', e.target.value)} required />
+          <input placeholder="Origin country" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.originCountry} onChange={(e) => onChangeField('originCountry', e.target.value)} required />
+          <input placeholder="Target major" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.targetMajor} onChange={(e) => onChangeField('targetMajor', e.target.value)} required />
+          <input placeholder="Target region" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.targetRegion} onChange={(e) => onChangeField('targetRegion', e.target.value)} />
+          <input placeholder="Study level (Bachelor/Master/PhD)" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.studyLevel} onChange={(e) => onChangeField('studyLevel', e.target.value)} required />
+          <input placeholder="GPA" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.gpa} onChange={(e) => onChangeField('gpa', e.target.value)} />
+          <input placeholder="SAT/ACT score" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.sat} onChange={(e) => onChangeField('sat', e.target.value)} />
+          <textarea placeholder="Achievements" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-28" value={formData.achievements} onChange={(e) => onChangeField('achievements', e.target.value)} />
+          <textarea placeholder="Interests (comma separated)" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-24" value={formData.interests} onChange={(e) => onChangeField('interests', e.target.value)} />
+          <button type="submit" className="md:col-span-2 rounded-xl bg-indigo-600 text-white py-3 font-semibold hover:bg-indigo-700">Save & Continue to Dashboard</button>
         </form>
       </div>
     </main>
   );
 }
 
-function getPageFromHash(): AppPage {
+function readProfile(): UserProfile | null {
+  const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    return { ...emptyProfile, ...(JSON.parse(raw) as Partial<UserProfile>) };
+  } catch {
+    return null;
+  }
+}
+
+function getInitialPage(savedProfile: UserProfile | null): AppPage {
   const hash = window.location.hash.replace('#', '').toLowerCase();
   if (hash === 'consultancy') return 'consultancy';
   if (hash === 'profile') return 'profile';
-  return 'search';
+  if (!savedProfile) return 'profile';
+  return 'dashboard';
 }
 
 function App() {
-  const [page, setPage] = useState<AppPage>(getPageFromHash());
+  const [profile, setProfile] = useState<UserProfile>(() => readProfile() || emptyProfile);
+  const [page, setPage] = useState<AppPage>(() => getInitialPage(readProfile()));
 
   useEffect(() => {
-    const onHashChange = () => setPage(getPageFromHash());
+    const onHashChange = () => {
+      const latestProfile = readProfile();
+      setPage(getInitialPage(latestProfile));
+    };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const navigate = (next: AppPage) => {
-    window.location.hash = next === 'search' ? '' : next;
+    if (next === 'dashboard') {
+      window.location.hash = '';
+    } else {
+      window.location.hash = next;
+    }
     setPage(next);
+  };
+
+  const saveProfile = (nextProfile: UserProfile) => {
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    setProfile(nextProfile);
+    navigate('dashboard');
   };
 
   return (
     <div id="top" className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 flex flex-col">
-      <Navbar currentPage={page} onNavigate={navigate} />
-      {page === 'search' && <MainSearch />}
+      <Navbar currentPage={page === 'dashboard' ? 'search' : page} onNavigate={(p) => navigate(p === 'search' ? 'dashboard' : p)} />
+      {page === 'dashboard' && <DashboardPage profile={profile} />}
       {page === 'consultancy' && <ConsultancyPage />}
-      {page === 'profile' && <ProfilePage />}
+      {page === 'profile' && <ProfilePage profile={profile} onSave={saveProfile} />}
       <Footer />
     </div>
   );
