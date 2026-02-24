@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { SearchForm } from './components/SearchForm';
-import { ScholarshipCard } from './components/ScholarshipCard';
-import { Footer } from './components/Footer';
-import { LegalSections } from './components/LegalSections';
-import { findScholarships, findCourses } from './services/gemini';
-import { CourseCard } from './components/CourseCard';
-import Chat from './pages/Chat';
-import Profile from './pages/Profile';
-import { SearchParams, SearchResult, CourseSearchResult } from './types';
+import { Navbar } from '@/components/Navbar';
+import { Hero } from '@/components/Hero';
+import { SearchForm } from '@/components/SearchForm';
+import { ScholarshipCard } from '@/components/ScholarshipCard';
+import { Footer } from '@/components/Footer';
+import { LegalSections } from '@/components/LegalSections';
+import { findScholarships, findCourses } from '@/services/gemini';
+import { CourseCard } from '@/components/CourseCard';
+import { SearchParams, SearchResult, CourseSearchResult } from '@/types';
 
 function MainSearch() {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
@@ -103,17 +100,11 @@ function MainSearch() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 flex flex-col">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<MainSearch />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-        <Footer />
-      </div>
-    </BrowserRouter>
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 flex flex-col"> 
+      <Navbar />
+      <MainSearch />
+      <Footer />
+    </div>
   );
 }
 
