@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Scholarship as ApiScholarship, Course } from '../types';
+import { Scholarship as ApiScholarship } from '@/types';
 
 export interface UserProfile {
   name: string;
