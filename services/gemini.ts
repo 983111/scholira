@@ -17,8 +17,11 @@ const normalizeSources = (payload: Record<string, unknown>): GroundingSource[] =
 
 const normalizeScholarships = (payload: Record<string, unknown>): Scholarship[] => {
   const rawScholarships =
-    toArray<Record<string, unknown>>(payload.scholarships) ||
-    toArray<Record<string, unknown>>(payload.results);
+    toArray<Record<string, unknown>>(payload.scholarships).length > 0
+      ? toArray<Record<string, unknown>>(payload.scholarships)
+      : toArray<Record<string, unknown>>(payload.results).length > 0
+      ? toArray<Record<string, unknown>>(payload.results)
+      : toArray<Record<string, unknown>>(payload.data);
 
   return rawScholarships
     .map((item) => ({
@@ -63,7 +66,9 @@ const normalizeCourses = (payload: Record<string, unknown>): CourseSearchResult 
   const rawCourses =
     toArray<Record<string, unknown>>(payload.courses).length > 0
       ? toArray<Record<string, unknown>>(payload.courses)
-      : toArray<Record<string, unknown>>(payload.results);
+      : toArray<Record<string, unknown>>(payload.results).length > 0
+      ? toArray<Record<string, unknown>>(payload.results)
+      : toArray<Record<string, unknown>>(payload.data);
 
   const courses = rawCourses.map((course, index) => ({
     id: typeof course.id === 'string' ? course.id : `${course.name ?? course.title ?? 'course'}-${index}`,
