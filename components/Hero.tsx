@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Hero: React.FC = () => {
   return (
-    <section id="top" className="relative overflow-hidden pb-24 pt-10 bg-gradient-to-br from-indigo-600 via-blue-500 to-cyan-400">
+    <section id="top" className="relative overflow-hidden pb-24 pt-10 bg-gradient-to-br from-emerald-700 via-teal-600 to-teal-400">
       <div className="absolute inset-0 opacity-30">
         <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
@@ -19,9 +19,9 @@ export const Hero: React.FC = () => {
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6 leading-tight">
           Build Your Future with <br />
-          <span className="text-cyan-100">Brighter Global Opportunities</span>
+          <span className="text-teal-100">Brighter Global Opportunities</span>
         </h1>
-        <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-indigo-50 leading-relaxed">
+        <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-emerald-50 leading-relaxed">
           Scholira connects students with verified scholarships and professional courses through smart search and reliable backend data.
         </p>
       </div>
