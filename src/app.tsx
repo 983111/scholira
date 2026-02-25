@@ -71,6 +71,13 @@ interface UserProfile {
   achievements: string;
 }
 
+interface ScholarshipFilters {
+  originCountry: string;
+  studyLevel: string;
+  targetRegion: string;
+  fieldOfStudy: string;
+}
+
 interface ConsultancyMessage {
   from: 'you' | 'advisor';
   text: string;
@@ -85,6 +92,7 @@ const sanitizeConsultancyReply = (reply: string): string => {
 };
 
 const PROFILE_STORAGE_KEY = 'scholira-user-profile';
+const SCHOLARSHIP_FILTERS_STORAGE_KEY = 'scholira-scholarship-filters';
 
 const emptyProfile: UserProfile = {
   fullName: '',
@@ -119,12 +127,23 @@ const courseLevels = ['Any', 'Beginner', 'Intermediate', 'Advanced'];
 const hasCompletedProfile = (profile: UserProfile) =>
   Boolean(profile.fullName && profile.originCountry && profile.targetMajor && profile.studyLevel);
 
+const getDefaultScholarshipFilters = (profile: UserProfile): ScholarshipFilters => ({
+  originCountry: profile.originCountry || 'Any',
+  studyLevel: profile.studyLevel || 'Any',
+  targetRegion: profile.targetRegion || 'Any',
+  fieldOfStudy: profile.targetMajor || 'Any',
+});
+
 function DashboardPage({
   profile,
+  scholarshipFilters,
+  setScholarshipFilters,
   onOpenConsultancy,
   onOpenProfile,
 }: {
   profile: UserProfile;
+  scholarshipFilters: ScholarshipFilters;
+  setScholarshipFilters: React.Dispatch<React.SetStateAction<ScholarshipFilters>>;
   onOpenConsultancy: () => void;
   onOpenProfile: () => void;
 }) {
@@ -135,12 +154,6 @@ function DashboardPage({
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState(profile.targetMajor);
-  const [scholarshipFilters, setScholarshipFilters] = useState({
-    originCountry: profile.originCountry || 'Any',
-    studyLevel: profile.studyLevel || 'Any',
-    targetRegion: profile.targetRegion || 'Any',
-    fieldOfStudy: profile.targetMajor || 'Any',
-  });
   const [courseFilters, setCourseFilters] = useState({
     subject: 'Any',
     level: 'Any',
@@ -206,12 +219,7 @@ function DashboardPage({
   };
 
   const refreshScholarshipsFromProfile = async () => {
-    setScholarshipFilters({
-      originCountry: profile.originCountry || 'Any',
-      studyLevel: profile.studyLevel || 'Any',
-      targetRegion: profile.targetRegion || 'Any',
-      fieldOfStudy: profile.targetMajor || 'Any',
-    });
+    setScholarshipFilters(getDefaultScholarshipFilters(profile));
     await handleScholarshipSearch(recommendationParams);
   };
 
@@ -406,53 +414,10 @@ function DashboardPage({
           <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-8 max-w-4xl mx-auto relative z-10">
             <h3 className="font-bold text-slate-900 mb-1">Scholarships from your saved profile</h3>
             <p className="text-sm text-slate-600 mt-1">
-              Fine-tune your scholarship results with filters that map directly to the backend.
+              Scholarship filters are now managed from your Profile page and applied here.
             </p>
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <select
-                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
-                value={scholarshipFilters.originCountry}
-                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, originCountry: e.target.value }))}
-              >
-                {scholarshipCountries.map((country) => (
-                  <option key={country} value={country}>
-                    Country: {country}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
-                value={scholarshipFilters.studyLevel}
-                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, studyLevel: e.target.value }))}
-              >
-                {scholarshipStudyLevels.map((level) => (
-                  <option key={level} value={level}>
-                    Study Level: {level}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
-                value={scholarshipFilters.targetRegion}
-                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, targetRegion: e.target.value }))}
-              >
-                {scholarshipRegions.map((region) => (
-                  <option key={region} value={region}>
-                    Target Region: {region}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
-                value={scholarshipFilters.fieldOfStudy}
-                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, fieldOfStudy: e.target.value }))}
-              >
-                {scholarshipFields.map((field) => (
-                  <option key={field} value={field}>
-                    Field of Study: {field}
-                  </option>
-                ))}
-              </select>
+            <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-slate-700">
+              Current filters: {scholarshipFilters.originCountry} · {scholarshipFilters.studyLevel} · {scholarshipFilters.targetRegion} · {scholarshipFilters.fieldOfStudy}
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <button
@@ -461,15 +426,7 @@ function DashboardPage({
                 disabled={loading}
                 className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50"
               >
-                {loading ? 'Loading...' : 'Apply Filters'}
-              </button>
-              <button
-                type="button"
-                onClick={refreshScholarshipsFromProfile}
-                disabled={loading}
-                className="rounded-xl border border-emerald-200 text-emerald-800 px-5 py-3 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-60"
-              >
-                Use Profile Defaults
+                {loading ? 'Loading...' : 'Apply Profile Filters'}
               </button>
               <button
                 type="button"
@@ -646,12 +603,25 @@ function ConsultancyPage({ profile }: { profile: UserProfile }) {
 
 function ProfilePage({
   profile,
+  scholarshipFilters,
+  onSaveScholarshipFilters,
   onSave,
 }: {
   profile: UserProfile;
+  scholarshipFilters: ScholarshipFilters;
+  onSaveScholarshipFilters: (filters: ScholarshipFilters) => void;
   onSave: (profile: UserProfile) => void;
 }) {
   const [formData, setFormData] = useState<UserProfile>(profile);
+  const [filterData, setFilterData] = useState<ScholarshipFilters>(scholarshipFilters);
+
+  useEffect(() => {
+    setFormData(profile);
+  }, [profile]);
+
+  useEffect(() => {
+    setFilterData(scholarshipFilters);
+  }, [scholarshipFilters]);
 
   const onChangeField = (field: keyof UserProfile, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -659,6 +629,7 @@ function ProfilePage({
 
   const submitProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    onSaveScholarshipFilters(filterData);
     onSave(formData);
   };
 
@@ -677,6 +648,24 @@ function ProfilePage({
           <input placeholder="SAT/ACT score" className="rounded-xl border border-slate-200 px-4 py-2.5" value={formData.sat} onChange={(e) => onChangeField('sat', e.target.value)} />
           <textarea placeholder="Achievements" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-28" value={formData.achievements} onChange={(e) => onChangeField('achievements', e.target.value)} />
           <textarea placeholder="Interests (comma separated)" className="md:col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 min-h-24" value={formData.interests} onChange={(e) => onChangeField('interests', e.target.value)} />
+          <div className="md:col-span-2 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
+            <h2 className="text-sm font-semibold text-slate-900">Scholarship Filters</h2>
+            <p className="text-xs text-slate-600 mt-1">These filters are applied from your Dashboard scholarship tab.</p>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <select className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500" value={filterData.originCountry} onChange={(e) => setFilterData((prev) => ({ ...prev, originCountry: e.target.value }))}>
+                {scholarshipCountries.map((country) => <option key={country} value={country}>Country: {country}</option>)}
+              </select>
+              <select className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500" value={filterData.studyLevel} onChange={(e) => setFilterData((prev) => ({ ...prev, studyLevel: e.target.value }))}>
+                {scholarshipStudyLevels.map((level) => <option key={level} value={level}>Study Level: {level}</option>)}
+              </select>
+              <select className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500" value={filterData.targetRegion} onChange={(e) => setFilterData((prev) => ({ ...prev, targetRegion: e.target.value }))}>
+                {scholarshipRegions.map((region) => <option key={region} value={region}>Target Region: {region}</option>)}
+              </select>
+              <select className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500" value={filterData.fieldOfStudy} onChange={(e) => setFilterData((prev) => ({ ...prev, fieldOfStudy: e.target.value }))}>
+                {scholarshipFields.map((field) => <option key={field} value={field}>Field of Study: {field}</option>)}
+              </select>
+            </div>
+          </div>
           <button type="submit" className="md:col-span-2 rounded-xl bg-emerald-700 text-white py-3 font-semibold hover:bg-emerald-800">Save Profile & Open Dashboard</button>
         </form>
       </div>
@@ -694,6 +683,16 @@ function readProfile(): UserProfile | null {
   }
 }
 
+function readScholarshipFilters(profile: UserProfile): ScholarshipFilters {
+  const raw = window.localStorage.getItem(SCHOLARSHIP_FILTERS_STORAGE_KEY);
+  if (!raw) return getDefaultScholarshipFilters(profile);
+  try {
+    return { ...getDefaultScholarshipFilters(profile), ...(JSON.parse(raw) as Partial<ScholarshipFilters>) };
+  } catch {
+    return getDefaultScholarshipFilters(profile);
+  }
+}
+
 function getInitialPage(savedProfile: UserProfile | null): AppPage {
   const hash = window.location.hash.replace('#', '').toLowerCase();
 
@@ -708,12 +707,18 @@ function getInitialPage(savedProfile: UserProfile | null): AppPage {
 
 function App() {
   const [profile, setProfile] = useState<UserProfile>(() => readProfile() || emptyProfile);
+  const [scholarshipFilters, setScholarshipFilters] = useState<ScholarshipFilters>(() => {
+    const savedProfile = readProfile() || emptyProfile;
+    return readScholarshipFilters(savedProfile);
+  });
   const [page, setPage] = useState<AppPage>(() => getInitialPage(readProfile()));
 
   useEffect(() => {
     const onHashChange = () => {
       const latestProfile = readProfile();
-      setProfile(latestProfile || emptyProfile);
+      const resolvedProfile = latestProfile || emptyProfile;
+      setProfile(resolvedProfile);
+      setScholarshipFilters(readScholarshipFilters(resolvedProfile));
       setPage(getInitialPage(latestProfile));
     };
     window.addEventListener('hashchange', onHashChange);
@@ -741,12 +746,32 @@ function App() {
     navigate('dashboard');
   };
 
+  const saveScholarshipFilters = (nextFilters: ScholarshipFilters) => {
+    window.localStorage.setItem(SCHOLARSHIP_FILTERS_STORAGE_KEY, JSON.stringify(nextFilters));
+    setScholarshipFilters(nextFilters);
+  };
+
   return (
     <div id="top" className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-teal-50 flex flex-col">
       <Navbar currentPage={page === 'dashboard' ? 'search' : page} onNavigate={(p) => navigate(p === 'search' ? 'dashboard' : p)} />
-      {page === 'dashboard' && <DashboardPage profile={profile} onOpenConsultancy={() => navigate('consultancy')} onOpenProfile={() => navigate('profile')} />}
+      {page === 'dashboard' && (
+        <DashboardPage
+          profile={profile}
+          scholarshipFilters={scholarshipFilters}
+          setScholarshipFilters={setScholarshipFilters}
+          onOpenConsultancy={() => navigate('consultancy')}
+          onOpenProfile={() => navigate('profile')}
+        />
+      )}
       {page === 'consultancy' && <ConsultancyPage profile={profile} />}
-      {page === 'profile' && <ProfilePage profile={profile} onSave={saveProfile} />}
+      {page === 'profile' && (
+        <ProfilePage
+          profile={profile}
+          scholarshipFilters={scholarshipFilters}
+          onSaveScholarshipFilters={saveScholarshipFilters}
+          onSave={saveProfile}
+        />
+      )}
       <Footer />
     </div>
   );
