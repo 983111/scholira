@@ -76,6 +76,14 @@ interface ConsultancyMessage {
   text: string;
 }
 
+const sanitizeConsultancyReply = (reply: string): string => {
+  return reply
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/(^|\n)\s*(reasoning|thought process|analysis)\s*:\s*[\s\S]*$/i, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 const PROFILE_STORAGE_KEY = 'scholira-user-profile';
 
 const emptyProfile: UserProfile = {
@@ -320,10 +328,24 @@ function DashboardPage({
           </div>
         </section>
 
-        <div className="relative z-30 flex justify-center -mt-20 mb-8">
-          <div className="bg-white/95 backdrop-blur-lg p-1.5 rounded-2xl border border-emerald-100 inline-flex shadow-xl">
-            <button onClick={() => setActiveTab('scholarships')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Scholarships</button>
-            <button onClick={() => setActiveTab('courses')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'courses' ? 'bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Professional Courses</button>
+        <div className="relative z-30 flex justify-center mt-8 mb-8">
+          <div className="bg-white p-1.5 rounded-xl border border-slate-200 inline-flex shadow-sm" role="tablist" aria-label="Recommendation type">
+            <button
+              onClick={() => setActiveTab('scholarships')}
+              role="tab"
+              aria-selected={activeTab === 'scholarships'}
+              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'scholarships' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}
+            >
+              Scholarships
+            </button>
+            <button
+              onClick={() => setActiveTab('courses')}
+              role="tab"
+              aria-selected={activeTab === 'courses'}
+              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'courses' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'}`}
+            >
+              Professional Courses
+            </button>
           </div>
         </div>
 
@@ -435,9 +457,10 @@ function ConsultancyPage({ profile }: { profile: UserProfile }) {
       }
 
       const data = (await res.json()) as { reply?: string };
+      const cleanReply = sanitizeConsultancyReply(data.reply || '');
       setHistory((prev) => [
         ...prev,
-        { from: 'advisor', text: data.reply || 'I could not parse the response. Please try rephrasing your question.' },
+        { from: 'advisor', text: cleanReply || 'I could not parse the response. Please try rephrasing your question.' },
       ]);
     } catch {
       setHistory((prev) => [...prev, { from: 'advisor', text: 'Sorry, I could not connect. Please try again.' }]);
