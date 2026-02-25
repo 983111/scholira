@@ -193,21 +193,36 @@ function ConsultancyPage() {
     },
   ]);
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = message.trim();
-    if (!trimmed) return;
+  const sendMessage = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const trimmed = message.trim();
+  if (!trimmed || loading) return;
 
-    setHistory((prev) => [
-      ...prev,
-      { from: 'you', text: trimmed },
-      {
-        from: 'advisor',
-        text: 'Thanks! Based on that, prioritize scholarships with partial funding + low application fees, and prepare a strong SOP draft early.',
-      },
-    ]);
-    setMessage('');
-  };
+  const newHistory = [...history, { from: 'you' as const, text: trimmed }];
+  setHistory(newHistory);
+  setMessage('');
+  setLoading(true);
+
+  try {
+    const apiMessages = newHistory.map(m => ({
+      role: m.from === 'you' ? 'user' : 'assistant',
+      content: m.text
+    }));
+
+    const res = await fetch('https://scholira-consultancy.vishwajeetadkine705.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: apiMessages, userProfile: profile }),
+    });
+
+    const data = await res.json();
+    setHistory(prev => [...prev, { from: 'advisor', text: data.reply }]);
+  } catch {
+    setHistory(prev => [...prev, { from: 'advisor', text: 'Sorry, I could not connect. Please try again.' }]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
