@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { SearchForm } from '@/components/SearchForm';
 import { ScholarshipCard } from '@/components/ScholarshipCard';
 import { Footer } from '@/components/Footer';
 import { LegalSections } from '@/components/LegalSections';
@@ -10,6 +9,55 @@ import { CourseCard } from '@/components/CourseCard';
 import { SearchParams, SearchResult, CourseSearchResult } from '@/types';
 
 type AppPage = 'dashboard' | 'consultancy' | 'profile';
+
+
+const iconClassName = 'w-5 h-5';
+
+function GraduationCapIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={`${iconClassName} ${className || ''}`.trim()}>
+      <path d="M3 9l9-4 9 4-9 4-9-4Z" />
+      <path d="M7 11v3c0 1.7 2.2 3 5 3s5-1.3 5-3v-3" />
+    </svg>
+  );
+}
+
+function FileTextIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={`${iconClassName} ${className || ''}`.trim()}>
+      <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" />
+      <path d="M14 2v5h5" />
+      <path d="M9 13h6M9 17h6" />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={`${iconClassName} ${className || ''}`.trim()}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  );
+}
+
+function TrendingUpIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={`${iconClassName} ${className || ''}`.trim()}>
+      <path d="M3 17l6-6 4 4 7-7" />
+      <path d="M14 8h6v6" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={`${iconClassName} ${className || ''}`.trim()}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12 2.5 2.5L16 9" />
+    </svg>
+  );
+}
 
 interface UserProfile {
   fullName: string;
@@ -48,9 +96,11 @@ const hasCompletedProfile = (profile: UserProfile) =>
 function DashboardPage({
   profile,
   onOpenConsultancy,
+  onOpenProfile,
 }: {
   profile: UserProfile;
   onOpenConsultancy: () => void;
+  onOpenProfile: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<'scholarships' | 'courses'>('scholarships');
   const [scholarshipResult, setScholarshipResult] = useState<SearchResult | null>(null);
@@ -60,6 +110,35 @@ function DashboardPage({
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState(profile.targetMajor);
   const [autoRecommendationsLoaded, setAutoRecommendationsLoaded] = useState(false);
+
+  const upcomingDeadlines = (scholarshipResult?.scholarships || [])
+    .slice()
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .slice(0, 5);
+
+  const stats = [
+    {
+      label: 'Scholarships Found',
+      value: scholarshipResult?.scholarships.length || 0,
+      icon: GraduationCapIcon,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+    },
+    {
+      label: 'Courses Recommended',
+      value: courseResult?.courses.length || 0,
+      icon: FileTextIcon,
+      color: 'text-purple-600',
+      bg: 'bg-purple-50',
+    },
+    {
+      label: 'Profile Completion',
+      value: '100%',
+      icon: CheckCircleIcon,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+    },
+  ];
 
   const recommendationParams: SearchParams = useMemo(
     () => ({
@@ -87,6 +166,10 @@ function DashboardPage({
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshScholarshipsFromProfile = async () => {
+    await handleScholarshipSearch(recommendationParams);
   };
 
   const handleCourseSearch = async (e: React.FormEvent) => {
@@ -150,6 +233,93 @@ function DashboardPage({
           </div>
         </div>
 
+        <section className="mt-8 space-y-8 max-w-6xl mx-auto">
+          <div className="flex justify-between items-end flex-wrap gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Welcome back, {profile.fullName.split(' ')[0]}</h1>
+              <p className="text-slate-500 mt-1">Here's what's happening with your applications today.</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Current GPA</p>
+              <p className="text-2xl font-bold text-slate-900">{profile.gpa || 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {stats.map((stat) => (
+              <div key={stat.label} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg}`}>
+                  <stat.icon className={`${stat.color} w-6 h-6`} />
+                </div>
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">{stat.label}</p>
+                  <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <ClockIcon className="text-slate-400" />
+                Upcoming Deadlines
+              </h2>
+              <div className="space-y-4">
+                {upcomingDeadlines.length === 0 ? (
+                  <p className="text-slate-400 text-sm">No upcoming deadlines yet. Refresh scholarships from your profile.</p>
+                ) : (
+                  upcomingDeadlines.map((item) => {
+                    const daysLeft = Math.ceil((new Date(item.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={`${item.name}-${item.deadline}`} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                        <div>
+                          <p className="font-medium text-slate-900">{item.name}</p>
+                          <p className="text-xs text-slate-500">Scholarship</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-emerald-600">{item.deadline}</p>
+                          <p className="text-xs text-slate-400">{daysLeft} days left</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+              <div className="relative z-10">
+                <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
+                  <TrendingUpIcon className="text-emerald-400" />
+                  AI Insight
+                </h2>
+                <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  We now use your saved profile directly for scholarship matching, so you only enter your details once.
+                  Update your profile only when your goals or scores change.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={refreshScholarshipsFromProfile}
+                    className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500 transition-colors"
+                  >
+                    Refresh Scholarships
+                  </button>
+                  <button
+                    onClick={onOpenProfile}
+                    className="inline-flex items-center gap-2 border border-emerald-400/40 text-emerald-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500/10 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10"></div>
+            </div>
+          </div>
+        </section>
+
         <div className="relative z-30 flex justify-center -mt-20 mb-8">
           <div className="bg-white/95 backdrop-blur-lg p-1.5 rounded-2xl border border-emerald-100 inline-flex shadow-xl">
             <button onClick={() => setActiveTab('scholarships')} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'scholarships' ? 'bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'}`}>Scholarships</button>
@@ -158,7 +328,29 @@ function DashboardPage({
         </div>
 
         {activeTab === 'scholarships' ? (
-          <SearchForm onSearch={handleScholarshipSearch} isLoading={loading} />
+          <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-8 max-w-4xl mx-auto relative z-10">
+            <h3 className="font-bold text-slate-900 mb-1">Scholarships from your saved profile</h3>
+            <p className="text-sm text-slate-600 mt-1">
+              We use your profile data automatically. No need to enter scholarship criteria again.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={refreshScholarshipsFromProfile}
+                disabled={loading}
+                className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50"
+              >
+                {loading ? 'Loading...' : 'Find Scholarships'}
+              </button>
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                className="rounded-xl border border-emerald-200 text-emerald-800 px-5 py-3 text-sm font-semibold hover:bg-emerald-50"
+              >
+                Update Profile Details
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-8 max-w-4xl mx-auto relative z-10">
             <h3 className="font-bold text-slate-900 mb-1">Find Professional Courses</h3>
@@ -384,7 +576,7 @@ function App() {
   return (
     <div id="top" className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-teal-50 flex flex-col">
       <Navbar currentPage={page === 'dashboard' ? 'search' : page} onNavigate={(p) => navigate(p === 'search' ? 'dashboard' : p)} />
-      {page === 'dashboard' && <DashboardPage profile={profile} onOpenConsultancy={() => navigate('consultancy')} />}
+      {page === 'dashboard' && <DashboardPage profile={profile} onOpenConsultancy={() => navigate('consultancy')} onOpenProfile={() => navigate('profile')} />}
       {page === 'consultancy' && <ConsultancyPage profile={profile} />}
       {page === 'profile' && <ProfilePage profile={profile} onSave={saveProfile} />}
       <Footer />
