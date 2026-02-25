@@ -28,14 +28,14 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, isLoading }) =
     onSearch(params);
   };
 
-  const inputClasses = 'block w-full rounded-xl border-indigo-100 py-3 px-4 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white placeholder-slate-400';
+  const inputClasses = 'block w-full rounded-xl border-emerald-100 py-3 px-4 text-slate-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm bg-white placeholder-slate-400';
   const labelClasses = 'block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5';
 
   return (
-    <div id="search" className="bg-white rounded-2xl shadow-xl border border-indigo-100 p-6 md:p-8 max-w-5xl mx-auto relative z-10">
+    <div id="search" className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-6 md:p-8 max-w-5xl mx-auto relative z-10">
       <form onSubmit={handleSubmit} className="space-y-8" aria-label="Scholarship search form">
         <div>
-          <h3 className="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-indigo-100">Target & Background</h3>
+          <h3 className="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-emerald-100">Target & Background</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div><label htmlFor="originCountry" className={labelClasses}>Citizenship</label><select id="originCountry" name="originCountry" value={params.originCountry} onChange={handleChange} className={inputClasses}><option value="Uzbekistan">Uzbekistan</option><option value="Kazakhstan">Kazakhstan</option><option value="Kyrgyzstan">Kyrgyzstan</option><option value="Tajikistan">Tajikistan</option><option value="Vietnam">Vietnam</option><option value="India">India</option><option value="International">International</option></select></div>
             <div><label htmlFor="studyLevel" className={labelClasses}>Level</label><select id="studyLevel" name="studyLevel" value={params.studyLevel} onChange={handleChange} className={inputClasses}><option value="High School">High School</option><option value="Bachelor's Degree">Bachelor's Degree</option><option value="Master's Degree">Master's Degree</option><option value="PhD">PhD / Doctorate</option></select></div>
@@ -45,7 +45,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, isLoading }) =
         </div>
 
         <div>
-          <h3 className="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-indigo-100">Score-Based Matching</h3>
+          <h3 className="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-emerald-100">Score-Based Matching</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div><label htmlFor="gpa" className={labelClasses}>GPA</label><input type="text" id="gpa" name="gpa" placeholder="3.8/4.0" value={params.gpa} onChange={handleChange} className={inputClasses} /></div>
             <div><label htmlFor="sat" className={labelClasses}>SAT</label><input type="text" id="sat" name="sat" placeholder="1450" value={params.sat} onChange={handleChange} className={inputClasses} /></div>
@@ -55,7 +55,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, isLoading }) =
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button type="submit" isLoading={isLoading} className="w-full md:w-auto min-w-[260px] shadow-lg shadow-indigo-100 text-base py-3.5">Find Scholarships</Button>
+          <Button type="submit" isLoading={isLoading} className="w-full md:w-auto min-w-[260px] shadow-lg shadow-emerald-100 text-base py-3.5">Find Scholarships</Button>
         </div>
       </form>
     </div>

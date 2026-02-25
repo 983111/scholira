@@ -1,6 +1,6 @@
 import React from 'react';
 
-const cardClass = 'bg-white border border-indigo-100 rounded-2xl p-6 shadow-sm';
+const cardClass = 'bg-white border border-emerald-100 rounded-2xl p-6 shadow-sm';
 
 export const LegalSections: React.FC = () => {
   return (
