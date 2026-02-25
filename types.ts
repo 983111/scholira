@@ -49,6 +49,7 @@ export interface CourseSearchParams {
   query: string;
   subject?: string;
   level?: string;
+  platform?: string;
 }
 
 export interface CourseSearchResult {

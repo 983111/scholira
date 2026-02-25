@@ -98,6 +98,24 @@ const emptyProfile: UserProfile = {
   achievements: '',
 };
 
+const scholarshipCountries = ['Any', 'India', 'Nigeria', 'Kenya', 'Pakistan', 'Bangladesh', 'United States', 'Canada'];
+const scholarshipStudyLevels = ['Any', 'Bachelor', 'Master', 'PhD', 'Diploma'];
+const scholarshipRegions = ['Any', 'Global', 'Europe', 'North America', 'Asia', 'Africa', 'Oceania'];
+const scholarshipFields = [
+  'Any',
+  'Computer Science',
+  'Data Science',
+  'Business',
+  'Engineering',
+  'Medicine',
+  'Public Policy',
+  'Law',
+  'Arts & Humanities',
+];
+
+const courseSubjects = ['Any', 'Computer Science', 'Data Science', 'Business', 'Design', 'Language', 'Health'];
+const courseLevels = ['Any', 'Beginner', 'Intermediate', 'Advanced'];
+
 const hasCompletedProfile = (profile: UserProfile) =>
   Boolean(profile.fullName && profile.originCountry && profile.targetMajor && profile.studyLevel);
 
@@ -117,6 +135,17 @@ function DashboardPage({
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [courseQuery, setCourseQuery] = useState(profile.targetMajor);
+  const [scholarshipFilters, setScholarshipFilters] = useState({
+    originCountry: profile.originCountry || 'Any',
+    studyLevel: profile.studyLevel || 'Any',
+    targetRegion: profile.targetRegion || 'Any',
+    fieldOfStudy: profile.targetMajor || 'Any',
+  });
+  const [courseFilters, setCourseFilters] = useState({
+    subject: 'Any',
+    level: 'Any',
+    platform: 'Any',
+  });
   const [autoRecommendationsLoaded, setAutoRecommendationsLoaded] = useState(false);
 
   const upcomingDeadlines = (scholarshipResult?.scholarships || [])
@@ -177,7 +206,26 @@ function DashboardPage({
   };
 
   const refreshScholarshipsFromProfile = async () => {
+    setScholarshipFilters({
+      originCountry: profile.originCountry || 'Any',
+      studyLevel: profile.studyLevel || 'Any',
+      targetRegion: profile.targetRegion || 'Any',
+      fieldOfStudy: profile.targetMajor || 'Any',
+    });
     await handleScholarshipSearch(recommendationParams);
+  };
+
+  const handleScholarshipFilterSearch = async () => {
+    const params: SearchParams = {
+      originCountry: scholarshipFilters.originCountry === 'Any' ? recommendationParams.originCountry : scholarshipFilters.originCountry,
+      studyLevel: scholarshipFilters.studyLevel === 'Any' ? recommendationParams.studyLevel : scholarshipFilters.studyLevel,
+      fieldOfStudy: scholarshipFilters.fieldOfStudy === 'Any' ? recommendationParams.fieldOfStudy : scholarshipFilters.fieldOfStudy,
+      targetRegion: scholarshipFilters.targetRegion === 'Any' ? recommendationParams.targetRegion : scholarshipFilters.targetRegion,
+      gpa: profile.gpa,
+      sat: profile.sat,
+    };
+
+    await handleScholarshipSearch(params);
   };
 
   const handleCourseSearch = async (e: React.FormEvent) => {
@@ -188,7 +236,12 @@ function DashboardPage({
     setSearched(true);
     setCourseResult(null);
     try {
-      const data = await findCourses({ query: courseQuery.trim() });
+      const data = await findCourses({
+        query: courseQuery.trim(),
+        subject: courseFilters.subject === 'Any' ? undefined : courseFilters.subject,
+        level: courseFilters.level === 'Any' ? undefined : courseFilters.level,
+        platform: courseFilters.platform === 'Any' ? undefined : courseFilters.platform,
+      });
       setCourseResult(data);
     } catch (err: any) {
       setError(err.message || 'An error occurred.');
@@ -353,16 +406,70 @@ function DashboardPage({
           <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-8 max-w-4xl mx-auto relative z-10">
             <h3 className="font-bold text-slate-900 mb-1">Scholarships from your saved profile</h3>
             <p className="text-sm text-slate-600 mt-1">
-              We use your profile data automatically. No need to enter scholarship criteria again.
+              Fine-tune your scholarship results with filters that map directly to the backend.
             </p>
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                value={scholarshipFilters.originCountry}
+                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, originCountry: e.target.value }))}
+              >
+                {scholarshipCountries.map((country) => (
+                  <option key={country} value={country}>
+                    Country: {country}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                value={scholarshipFilters.studyLevel}
+                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, studyLevel: e.target.value }))}
+              >
+                {scholarshipStudyLevels.map((level) => (
+                  <option key={level} value={level}>
+                    Study Level: {level}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                value={scholarshipFilters.targetRegion}
+                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, targetRegion: e.target.value }))}
+              >
+                {scholarshipRegions.map((region) => (
+                  <option key={region} value={region}>
+                    Target Region: {region}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                value={scholarshipFilters.fieldOfStudy}
+                onChange={(e) => setScholarshipFilters((prev) => ({ ...prev, fieldOfStudy: e.target.value }))}
+              >
+                {scholarshipFields.map((field) => (
+                  <option key={field} value={field}>
+                    Field of Study: {field}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleScholarshipFilterSearch}
+                disabled={loading}
+                className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50"
+              >
+                {loading ? 'Loading...' : 'Apply Filters'}
+              </button>
               <button
                 type="button"
                 onClick={refreshScholarshipsFromProfile}
                 disabled={loading}
-                className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50"
+                className="rounded-xl border border-emerald-200 text-emerald-800 px-5 py-3 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-60"
               >
-                {loading ? 'Loading...' : 'Find Scholarships'}
+                Use Profile Defaults
               </button>
               <button
                 type="button"
@@ -376,7 +483,7 @@ function DashboardPage({
         ) : (
           <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 p-8 max-w-4xl mx-auto relative z-10">
             <h3 className="font-bold text-slate-900 mb-1">Find Professional Courses</h3>
-            <form onSubmit={handleCourseSearch} className="flex flex-col sm:flex-row gap-4 mt-5">
+            <form onSubmit={handleCourseSearch} className="flex flex-col gap-4 mt-5">
               <input
                 type="text"
                 placeholder="What do you want to learn?"
@@ -384,6 +491,44 @@ function DashboardPage({
                 value={courseQuery}
                 onChange={(e) => setCourseQuery(e.target.value)}
               />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <select
+                  className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                  value={courseFilters.subject}
+                  onChange={(e) => setCourseFilters((prev) => ({ ...prev, subject: e.target.value }))}
+                >
+                  {courseSubjects.map((subject) => (
+                    <option key={subject} value={subject}>
+                      Subject: {subject}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="rounded-xl border border-emerald-100 py-3 px-4 focus:ring-emerald-500"
+                  value={courseFilters.level}
+                  onChange={(e) => setCourseFilters((prev) => ({ ...prev, level: e.target.value }))}
+                >
+                  {courseLevels.map((level) => (
+                    <option key={level} value={level}>
+                      Level: {level}
+                    </option>
+                  ))}
+                </select>
+                <div className="inline-flex rounded-xl border border-emerald-100 p-1 bg-emerald-50/50">
+                  {['Any', 'Coursera', 'edX'].map((platform) => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => setCourseFilters((prev) => ({ ...prev, platform }))}
+                      className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                        courseFilters.platform === platform ? 'bg-emerald-700 text-white' : 'text-emerald-800 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {platform}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button type="submit" disabled={loading} className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white px-8 py-3 rounded-xl font-bold">
                 {loading ? 'Searching...' : 'Search'}
               </button>
