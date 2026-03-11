@@ -1,6 +1,13 @@
-import { CourseSearchParams, CourseSearchResult, GroundingSource, Scholarship, SearchParams, SearchResult } from '../types';
+/**
+ * services/gemini.ts
+ * 
+ * Uses the local scholarship dataset first (instant, offline-capable).
+ * Falls back to the remote API if local data returns no results.
+ */
 
-const SCHOLARSHIP_API_URL = 'https://scholara-rag-api.vishwajeetadkine705.workers.dev';
+import { CourseSearchParams, CourseSearchResult, GroundingSource, Scholarship, SearchParams, SearchResult } from '../types';
+import { findScholarshipsLocal } from './localScholarships';
+
 const COURSE_API_URL = 'https://scholara-backend.vishwajeetadkine705.workers.dev';
 
 const toArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
@@ -13,53 +20,6 @@ const normalizeSources = (payload: Record<string, unknown>): GroundingSource[] =
       uri: typeof source.uri === 'string' ? source.uri : typeof source.url === 'string' ? source.url : '',
     }))
     .filter((source) => source.uri);
-};
-
-const normalizeScholarships = (payload: Record<string, unknown>): Scholarship[] => {
-  const rawScholarships =
-    toArray<Record<string, unknown>>(payload.scholarships).length > 0
-      ? toArray<Record<string, unknown>>(payload.scholarships)
-      : toArray<Record<string, unknown>>(payload.results).length > 0
-      ? toArray<Record<string, unknown>>(payload.results)
-      : toArray<Record<string, unknown>>(payload.data);
-
-  return rawScholarships
-    .map((item) => ({
-      name: typeof item.name === 'string' ? item.name : typeof item.title === 'string' ? item.title : 'Scholarship Opportunity',
-      provider:
-        typeof item.provider === 'string'
-          ? item.provider
-          : typeof item.organization === 'string'
-          ? item.organization
-          : 'Official Provider',
-      amount: typeof item.amount === 'string' ? item.amount : typeof item.funding === 'string' ? item.funding : 'See details',
-      deadline:
-        typeof item.deadline === 'string'
-          ? item.deadline
-          : typeof item.applicationDeadline === 'string'
-          ? item.applicationDeadline
-          : 'Rolling',
-      description:
-        typeof item.description === 'string'
-          ? item.description
-          : typeof item.summary === 'string'
-          ? item.summary
-          : 'Review provider details for this opportunity.',
-      eligibility: toArray<string>(item.eligibility).filter((entry): entry is string => typeof entry === 'string'),
-      location:
-        typeof item.location === 'string'
-          ? item.location
-          : typeof item.country === 'string'
-          ? item.country
-          : 'Global',
-      applicationUrl:
-        typeof item.applicationUrl === 'string'
-          ? item.applicationUrl
-          : typeof item.url === 'string'
-          ? item.url
-          : undefined,
-    }))
-    .filter((item) => item.name);
 };
 
 const normalizeCourses = (payload: Record<string, unknown>): CourseSearchResult => {
@@ -102,13 +62,24 @@ const normalizeCourses = (payload: Record<string, unknown>): CourseSearchResult 
 
 const parseJsonResponse = async (response: Response): Promise<Record<string, unknown>> => {
   const json = (await response.json()) as unknown;
-  if (!json || typeof json !== 'object') {
-    return {};
-  }
+  if (!json || typeof json !== 'object') return {};
   return json as Record<string, unknown>;
 };
 
+// ── Scholarships: local dataset first, remote fallback ────────────────────────
 export const findScholarships = async (params: SearchParams): Promise<SearchResult> => {
+  // 1. Try local dataset (instant, no network required)
+  try {
+    const localResult = await findScholarshipsLocal(params);
+    if (localResult.scholarships.length > 0) {
+      return localResult;
+    }
+  } catch (localErr) {
+    console.warn('Local scholarship search failed, falling back to API:', localErr);
+  }
+
+  // 2. Fallback: remote API
+  const SCHOLARSHIP_API_URL = 'https://scholara-rag-api.vishwajeetadkine705.workers.dev';
   const response = await fetch(SCHOLARSHIP_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -120,13 +91,35 @@ export const findScholarships = async (params: SearchParams): Promise<SearchResu
   }
 
   const payload = await parseJsonResponse(response);
+
+  const rawScholarships =
+    toArray<Record<string, unknown>>(payload.scholarships).length > 0
+      ? toArray<Record<string, unknown>>(payload.scholarships)
+      : toArray<Record<string, unknown>>(payload.results).length > 0
+      ? toArray<Record<string, unknown>>(payload.results)
+      : toArray<Record<string, unknown>>(payload.data);
+
+  const scholarships: Scholarship[] = rawScholarships
+    .map((item) => ({
+      name: typeof item.name === 'string' ? item.name : typeof item.title === 'string' ? item.title : 'Scholarship Opportunity',
+      provider: typeof item.provider === 'string' ? item.provider : typeof item.organization === 'string' ? item.organization : 'Official Provider',
+      amount: typeof item.amount === 'string' ? item.amount : typeof item.funding === 'string' ? item.funding : 'See details',
+      deadline: typeof item.deadline === 'string' ? item.deadline : typeof item.applicationDeadline === 'string' ? item.applicationDeadline : 'Rolling',
+      description: typeof item.description === 'string' ? item.description : typeof item.summary === 'string' ? item.summary : 'Review provider details.',
+      eligibility: toArray<string>(item.eligibility).filter((e): e is string => typeof e === 'string'),
+      location: typeof item.location === 'string' ? item.location : typeof item.country === 'string' ? item.country : 'Global',
+      applicationUrl: typeof item.applicationUrl === 'string' ? item.applicationUrl : typeof item.url === 'string' ? item.url : undefined,
+    }))
+    .filter((item) => item.name);
+
   return {
-    scholarships: normalizeScholarships(payload),
+    scholarships,
     rawText: typeof payload.rawText === 'string' ? payload.rawText : typeof payload.text === 'string' ? payload.text : undefined,
     sources: normalizeSources(payload),
   };
 };
 
+// ── Courses: remote API only ──────────────────────────────────────────────────
 export const findCourses = async (params: CourseSearchParams): Promise<CourseSearchResult> => {
   const response = await fetch(COURSE_API_URL, {
     method: 'POST',
